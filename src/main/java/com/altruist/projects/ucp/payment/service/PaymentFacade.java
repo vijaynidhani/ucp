@@ -1,5 +1,6 @@
 package com.altruist.projects.ucp.payment.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -94,6 +95,10 @@ public class PaymentFacade {
                 .toAccount(request.getToAccount())
                 .fromAccount(request.getFromAccount())
                 .description(request.getDescription())
+                .amount(request.getAmount())
+                .paymentMethod(request.getPaymentMethod())
+                .destinationCountry(request.getDestinationCountry())
+                .timestamp(LocalDateTime.now())
                 .build();
         
         Payment savedPayment = paymentRepository.save(payment);
@@ -101,6 +106,12 @@ public class PaymentFacade {
         
         // Process payment through selected gateway
         PaymentResponse response = gateway.processPayment(request);
+        
+        // Update payment record with status and charges
+        savedPayment.setStatus(response.getStatus());
+        savedPayment.setCharges(charges);
+        savedPayment.setTotalAmount(totalAmount);
+        paymentRepository.save(savedPayment);
         
         // Enrich response with charges and total amount
         response.setPaymentId(savedPayment.getId());
@@ -127,6 +138,16 @@ public class PaymentFacade {
      */
     public List<String> getAvailableGateways() {
         return List.copyOf(paymentGateways.keySet());
+    }
+    
+    /**
+     * Get all payment history
+     * TODO: Add pagination support for production use to handle large datasets
+     * Consider using Pageable parameter and returning Page<Payment>
+     */
+    public List<Payment> getPaymentHistory() {
+        log.info("Fetching all payment history");
+        return paymentRepository.findAll();
     }
     
 }
