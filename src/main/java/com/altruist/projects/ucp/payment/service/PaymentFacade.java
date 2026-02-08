@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.altruist.projects.ucp.payment.dto.PaymentRequest;
@@ -28,6 +29,9 @@ public class PaymentFacade {
     private final ChargeStrategy chargeStrategy;
     private final PaymentRepository paymentRepository;
     
+    @Value("${payment.default.country:IN}")
+    private String defaultCountry;
+    
     public PaymentFacade(List<PaymentGateway> gateways, 
                         ChargeStrategy chargeStrategy,
                         PaymentRepository paymentRepository) {
@@ -47,6 +51,12 @@ public class PaymentFacade {
      */
     public PaymentResponse processPayment(PaymentRequest request) {
         log.info("Processing payment request for: {} via {}", request.getName(), request.getPaymentMethod());
+        
+        // Set default country if not provided
+        if (request.getDestinationCountry() == null || request.getDestinationCountry().isEmpty()) {
+            request.setDestinationCountry(defaultCountry);
+            log.debug("Using default country: {}", defaultCountry);
+        }
         
         // Validate request
         if (request.getPaymentMethod() == null || request.getAmount() == null) {

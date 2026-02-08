@@ -15,8 +15,9 @@ public class PaymentRequest {
     private String toAccount;
     private String fromAccount;
     private String description;
-    private String destinationCountry;
-    private String paymentMethod; // "UPI" or "CARD"
+    @Builder.Default
+    private String destinationCountry = "IN"; // Default to India
+    private String paymentMethod; // "UPI" or "CARD" or "APPLE_PAY"
     private Double amount;
     
 }

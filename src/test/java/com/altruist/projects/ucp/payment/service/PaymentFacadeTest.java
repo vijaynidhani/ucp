@@ -12,9 +12,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.altruist.projects.ucp.payment.dto.PaymentRequest;
 import com.altruist.projects.ucp.payment.dto.PaymentResponse;
+import com.altruist.projects.ucp.payment.gateway.ApplePayPaymentGateway;
 import com.altruist.projects.ucp.payment.gateway.CardPaymentGateway;
 import com.altruist.projects.ucp.payment.gateway.UpiPaymentGateway;
 import com.altruist.projects.ucp.payment.model.Payment;
@@ -34,13 +36,17 @@ class PaymentFacadeTest {
         
         UpiPaymentGateway upiGateway = new UpiPaymentGateway();
         CardPaymentGateway cardGateway = new CardPaymentGateway();
+        ApplePayPaymentGateway applePayGateway = new ApplePayPaymentGateway();
         CountryBasedChargeStrategy chargeStrategy = new CountryBasedChargeStrategy();
         
         paymentFacade = new PaymentFacade(
-            Arrays.asList(upiGateway, cardGateway),
+            Arrays.asList(upiGateway, cardGateway, applePayGateway),
             chargeStrategy,
             paymentRepository
         );
+        
+        // Set default country using reflection since @Value won't be injected in tests
+        ReflectionTestUtils.setField(paymentFacade, "defaultCountry", "IN");
     }
     
     @Test
@@ -114,6 +120,76 @@ class PaymentFacadeTest {
     }
     
     @Test
+    void testProcessPaymentWithApplePay() {
+        // Given
+        Payment savedPayment = Payment.builder()
+                .id(3L)
+                .name("Alice Smith")
+                .toAccount("apple123456")
+                .fromAccount("1234567890")
+                .description("Apple Pay payment")
+                .build();
+        
+        when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
+        
+        PaymentRequest request = PaymentRequest.builder()
+                .name("Alice Smith")
+                .toAccount("apple123456")
+                .fromAccount("1234567890")
+                .description("Apple Pay payment")
+                .paymentMethod("APPLE_PAY")
+                .amount(1500.0)
+                .destinationCountry("GB")
+                .build();
+        
+        // When
+        PaymentResponse response = paymentFacade.processPayment(request);
+        
+        // Then
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        assertEquals("APPLE_PAY", response.getGatewayUsed());
+        assertEquals(3L, response.getPaymentId());
+        assertEquals(37.5, response.getCharges()); // 2.5% of 1500
+        assertEquals(1537.5, response.getTotalAmount());
+    }
+    
+    @Test
+    void testProcessPaymentWithDefaultCountry() {
+        // Given
+        Payment savedPayment = Payment.builder()
+                .id(4L)
+                .name("Test User")
+                .toAccount("9876543210")
+                .fromAccount("1234567890")
+                .description("Payment without country")
+                .build();
+        
+        when(paymentRepository.save(any(Payment.class))).thenReturn(savedPayment);
+        
+        PaymentRequest request = PaymentRequest.builder()
+                .name("Test User")
+                .toAccount("9876543210")
+                .fromAccount("1234567890")
+                .description("Payment without country")
+                .paymentMethod("UPI")
+                .amount(1000.0)
+                .destinationCountry(null) // No country specified
+                .build();
+        
+        // When
+        PaymentResponse response = paymentFacade.processPayment(request);
+        
+        // Then
+        assertNotNull(response);
+        assertEquals("SUCCESS", response.getStatus());
+        assertEquals("UPI", response.getGatewayUsed());
+        assertEquals(4L, response.getPaymentId());
+        assertEquals(10.0, response.getCharges()); // 1% of 1000 (default to IN)
+        assertEquals(1010.0, response.getTotalAmount());
+    }
+    
+    @Test
     void testProcessPaymentWithInvalidMethod() {
         // Given
         PaymentRequest request = PaymentRequest.builder()
@@ -142,9 +218,10 @@ class PaymentFacadeTest {
         
         // Then
         assertNotNull(gateways);
-        assertEquals(2, gateways.size());
+        assertEquals(3, gateways.size());
         assertTrue(gateways.contains("UPI"));
         assertTrue(gateways.contains("CARD"));
+        assertTrue(gateways.contains("APPLE_PAY"));
     }
     
 }
