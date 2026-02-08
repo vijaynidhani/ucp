@@ -1,20 +1,75 @@
 version: '3.8'
 
 services:
-  ucp-payment-api:
+  ucp-payment-api-1:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ucp-payment-api
-    ports:
-      - "8080:8080"
+    container_name: ucp-payment-api-1
     environment:
       - SPRING_PROFILES_ACTIVE=default
       - JAVA_OPTS=-Xmx512m -Xms256m
     restart: unless-stopped
+    networks:
+      - ucp-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health || exit 1"]
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/hello || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  ucp-payment-api-2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ucp-payment-api-2
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    restart: unless-stopped
+    networks:
+      - ucp-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/hello || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  ucp-payment-api-3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ucp-payment-api-3
+    environment:
+      - SPRING_PROFILES_ACTIVE=default
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    restart: unless-stopped
+    networks:
+      - ucp-network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/hello || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  nginx:
+    image: nginx:alpine
+    container_name: ucp-nginx-lb
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - ucp-payment-api-1
+      - ucp-payment-api-2
+      - ucp-payment-api-3
+    restart: unless-stopped
+    networks:
+      - ucp-network
+
+networks:
+  ucp-network:
+    driver: bridge

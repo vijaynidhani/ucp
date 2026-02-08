@@ -15,12 +15,15 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Create a non-root user
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Create a non-root user and logs directory
+RUN addgroup -S spring && adduser -S spring -G spring && \
+    mkdir -p /app/logs && \
+    chown -R spring:spring /app
 
 # Copy the jar from build stage
-COPY --from=build /app/target/*.jar app.jar
+COPY --from=build --chown=spring:spring /app/target/*.jar app.jar
+
+USER spring:spring
 
 # Expose port
 EXPOSE 8080
