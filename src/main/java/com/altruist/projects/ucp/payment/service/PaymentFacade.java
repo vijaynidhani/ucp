@@ -106,6 +106,9 @@ public class PaymentFacade {
      * Select payment gateway based on payment method
      */
     private PaymentGateway selectGateway(String paymentMethod) {
+        if (paymentMethod == null) {
+            return null;
+        }
         return paymentGateways.get(paymentMethod.toUpperCase());
     }
     

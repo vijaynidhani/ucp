@@ -28,7 +28,7 @@ class CountryBasedChargeStrategyTest {
     
     @Test
     void testCalculateChargesForUK() {
-        Double charges = chargeStrategy.calculateCharges("UK", 1000.0);
+        Double charges = chargeStrategy.calculateCharges("GB", 1000.0);
         assertEquals(25.0, charges); // 2.5% of 1000
     }
     
