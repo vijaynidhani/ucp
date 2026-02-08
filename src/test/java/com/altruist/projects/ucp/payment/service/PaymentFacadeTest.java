@@ -22,11 +22,16 @@ import com.altruist.projects.ucp.payment.gateway.UpiPaymentGateway;
 import com.altruist.projects.ucp.payment.model.Payment;
 import com.altruist.projects.ucp.payment.repository.PaymentRepository;
 import com.altruist.projects.ucp.payment.strategy.CountryBasedChargeStrategy;
+import com.altruist.projects.ucp.payment.validation.CountryPaymentRuleValidator;
+import com.altruist.projects.ucp.payment.validation.CountryPaymentRuleValidator.ValidationResult;
 
 class PaymentFacadeTest {
     
     @Mock
     private PaymentRepository paymentRepository;
+    
+    @Mock
+    private CountryPaymentRuleValidator ruleValidator;
     
     private PaymentFacade paymentFacade;
     
@@ -39,10 +44,14 @@ class PaymentFacadeTest {
         ApplePayPaymentGateway applePayGateway = new ApplePayPaymentGateway();
         CountryBasedChargeStrategy chargeStrategy = new CountryBasedChargeStrategy();
         
+        // Mock successful validation by default
+        when(ruleValidator.validate(any(), any())).thenReturn(ValidationResult.success());
+        
         paymentFacade = new PaymentFacade(
             Arrays.asList(upiGateway, cardGateway, applePayGateway),
             chargeStrategy,
-            paymentRepository
+            paymentRepository,
+            ruleValidator
         );
         
         // Set default country using reflection since @Value won't be injected in tests

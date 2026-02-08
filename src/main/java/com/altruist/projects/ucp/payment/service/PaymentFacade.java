@@ -15,6 +15,8 @@ import com.altruist.projects.ucp.payment.gateway.PaymentGateway;
 import com.altruist.projects.ucp.payment.model.Payment;
 import com.altruist.projects.ucp.payment.repository.PaymentRepository;
 import com.altruist.projects.ucp.payment.strategy.ChargeStrategy;
+import com.altruist.projects.ucp.payment.validation.CountryPaymentRuleValidator;
+import com.altruist.projects.ucp.payment.validation.CountryPaymentRuleValidator.ValidationResult;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,13 +31,15 @@ public class PaymentFacade {
     private final Map<String, PaymentGateway> paymentGateways;
     private final ChargeStrategy chargeStrategy;
     private final PaymentRepository paymentRepository;
+    private final CountryPaymentRuleValidator ruleValidator;
     
     @Value("${payment.default.country:IN}")
     private String defaultCountry;
     
     public PaymentFacade(List<PaymentGateway> gateways, 
                         ChargeStrategy chargeStrategy,
-                        PaymentRepository paymentRepository) {
+                        PaymentRepository paymentRepository,
+                        CountryPaymentRuleValidator ruleValidator) {
         this.paymentGateways = gateways.stream()
                 .collect(Collectors.toMap(
                     PaymentGateway::getGatewayType,
@@ -43,6 +47,7 @@ public class PaymentFacade {
                 ));
         this.chargeStrategy = chargeStrategy;
         this.paymentRepository = paymentRepository;
+        this.ruleValidator = ruleValidator;
         
         log.info("Payment Facade initialized with gateways: {}", paymentGateways.keySet());
     }
@@ -64,6 +69,20 @@ public class PaymentFacade {
             return PaymentResponse.builder()
                     .status("FAILED")
                     .message("Payment method and amount are required")
+                    .build();
+        }
+        
+        // Validate country-specific rules (amount range and time window)
+        ValidationResult validationResult = ruleValidator.validate(
+            request.getDestinationCountry(), 
+            request.getAmount()
+        );
+        
+        if (!validationResult.isValid()) {
+            log.warn("Payment validation failed: {}", validationResult.getErrorMessage());
+            return PaymentResponse.builder()
+                    .status("FAILED")
+                    .message(validationResult.getErrorMessage())
                     .build();
         }
         
