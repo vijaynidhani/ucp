@@ -23,6 +23,9 @@ The `PaymentFacade` provides a simplified interface for payment processing, hidi
 Payment gateways are implemented as adapters with a common `PaymentGateway` interface:
 - **UPI Gateway**: For UPI-based payments
 - **Card Gateway**: For card-based payments
+- **Apple Pay Gateway**: For Apple Pay-based payments
+
+All gateways have access to ChargeStrategy for potential gateway-specific charge calculations.
 
 #### Strategy Pattern
 The `ChargeStrategy` interface allows flexible charge calculation:
@@ -42,8 +45,8 @@ Content-Type: application/json
   "toAccount": "9876543210",
   "fromAccount": "1234567890",
   "description": "Payment for services",
-  "destinationCountry": "IN",
-  "paymentMethod": "UPI",
+  "destinationCountry": "IN",  // Optional, defaults to "IN" if not provided
+  "paymentMethod": "UPI",       // "UPI", "CARD", or "APPLE_PAY"
   "amount": 1000.0
 }
 ```
@@ -67,7 +70,7 @@ GET /api/payments/gateways
 
 **Response:**
 ```json
-["CARD", "UPI"]
+["APPLE_PAY", "CARD", "UPI"]
 ```
 
 ### Other APIs
@@ -135,6 +138,15 @@ The application uses H2 in-memory database with the following configuration:
 - **Password**: (empty)
 - **Console**: Enabled at `/h2-console` (for web-servlet environments)
 
+## Configuration
+
+The application supports the following configuration properties in `application.properties`:
+
+### Payment Configuration
+- **payment.default.country**: Default destination country for payments (default: "IN")
+  - Used when no destination country is specified in payment request
+  - Example: `payment.default.country=IN`
+
 ## Project Structure
 
 ```
@@ -184,11 +196,11 @@ Defines a family of algorithms for charge calculation, encapsulates each one, an
 ## Testing
 
 The project includes comprehensive tests:
-- Unit tests for PaymentFacade
+- Unit tests for PaymentFacade (including Apple Pay and default country tests)
 - Unit tests for ChargeStrategy
 - Integration tests for the application context
 
-**Test Coverage**: 12 tests, 0 failures
+**Test Coverage**: 14 tests, 0 failures
 
 ## Logging
 
