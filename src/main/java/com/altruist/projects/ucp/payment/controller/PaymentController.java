@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.altruist.projects.ucp.payment.dto.PaymentRequest;
 import com.altruist.projects.ucp.payment.dto.PaymentResponse;
+import com.altruist.projects.ucp.payment.model.Payment;
 import com.altruist.projects.ucp.payment.service.PaymentFacade;
 
 import lombok.RequiredArgsConstructor;
@@ -42,6 +43,13 @@ public class PaymentController {
     public ResponseEntity<List<String>> getAvailableGateways() {
         log.info("Fetching available payment gateways");
         return ResponseEntity.ok(paymentFacade.getAvailableGateways());
+    }
+    
+    @GetMapping("/history")
+    public ResponseEntity<List<Payment>> getPaymentHistory() {
+        log.info("Fetching payment history");
+        List<Payment> history = paymentFacade.getPaymentHistory();
+        return ResponseEntity.ok(history);
     }
     
 }

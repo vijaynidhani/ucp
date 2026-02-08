@@ -224,4 +224,35 @@ class PaymentFacadeTest {
         assertTrue(gateways.contains("APPLE_PAY"));
     }
     
+    @Test
+    void testGetPaymentHistory() {
+        // Given
+        Payment payment1 = Payment.builder()
+                .id(1L)
+                .name("John Doe")
+                .toAccount("9876543210")
+                .fromAccount("1234567890")
+                .description("Test payment 1")
+                .build();
+        
+        Payment payment2 = Payment.builder()
+                .id(2L)
+                .name("Jane Doe")
+                .toAccount("4111111111111111")
+                .fromAccount("9876543210")
+                .description("Test payment 2")
+                .build();
+        
+        when(paymentRepository.findAll()).thenReturn(Arrays.asList(payment1, payment2));
+        
+        // When
+        var history = paymentFacade.getPaymentHistory();
+        
+        // Then
+        assertNotNull(history);
+        assertEquals(2, history.size());
+        assertEquals("John Doe", history.get(0).getName());
+        assertEquals("Jane Doe", history.get(1).getName());
+    }
+    
 }
