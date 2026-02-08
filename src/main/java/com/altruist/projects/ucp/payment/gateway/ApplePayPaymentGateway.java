@@ -10,43 +10,43 @@ import com.altruist.projects.ucp.payment.strategy.ChargeStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * UPI Payment Gateway Adapter
+ * Apple Pay Payment Gateway Adapter
  */
 @Slf4j
 @Component
-public class UpiPaymentGateway implements PaymentGateway {
+public class ApplePayPaymentGateway implements PaymentGateway {
     
     @Autowired
     private ChargeStrategy chargeStrategy;
     
     @Override
     public PaymentResponse processPayment(PaymentRequest request) {
-        log.info("Processing payment through UPI gateway for account: {}", request.getToAccount());
+        log.info("Processing payment through Apple Pay gateway for account: {}", request.getToAccount());
         
-        // Simulate UPI payment processing
+        // Simulate Apple Pay payment processing
         try {
-            // UPI-specific processing logic would go here
-            log.debug("UPI payment processed successfully");
+            // Apple Pay-specific processing logic would go here
+            log.debug("Apple Pay payment processed successfully");
             
             return PaymentResponse.builder()
                     .status("SUCCESS")
-                    .message("Payment processed successfully via UPI")
-                    .gatewayUsed("UPI")
+                    .message("Payment processed successfully via Apple Pay")
+                    .gatewayUsed("APPLE_PAY")
                     .build();
                     
         } catch (Exception e) {
-            log.error("Error processing UPI payment: {}", e.getMessage());
+            log.error("Error processing Apple Pay payment: {}", e.getMessage());
             return PaymentResponse.builder()
                     .status("FAILED")
-                    .message("UPI payment failed: " + e.getMessage())
-                    .gatewayUsed("UPI")
+                    .message("Apple Pay payment failed: " + e.getMessage())
+                    .gatewayUsed("APPLE_PAY")
                     .build();
         }
     }
     
     @Override
     public String getGatewayType() {
-        return "UPI";
+        return "APPLE_PAY";
     }
     
 }

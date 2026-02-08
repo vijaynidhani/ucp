@@ -1,9 +1,11 @@
 package com.altruist.projects.ucp.payment.gateway;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.altruist.projects.ucp.payment.dto.PaymentRequest;
 import com.altruist.projects.ucp.payment.dto.PaymentResponse;
+import com.altruist.projects.ucp.payment.strategy.ChargeStrategy;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -13,6 +15,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Component
 public class CardPaymentGateway implements PaymentGateway {
+    
+    @Autowired
+    private ChargeStrategy chargeStrategy;
     
     @Override
     public PaymentResponse processPayment(PaymentRequest request) {
