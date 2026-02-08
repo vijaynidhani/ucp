@@ -142,6 +142,8 @@ public class PaymentFacade {
     
     /**
      * Get all payment history
+     * TODO: Add pagination support for production use to handle large datasets
+     * Consider using Pageable parameter and returning Page<Payment>
      */
     public List<Payment> getPaymentHistory() {
         log.info("Fetching all payment history");

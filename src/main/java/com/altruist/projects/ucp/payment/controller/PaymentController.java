@@ -47,6 +47,8 @@ public class PaymentController {
     
     @GetMapping("/history")
     public ResponseEntity<List<Payment>> getPaymentHistory() {
+        // TODO: Add authentication and authorization in production
+        // This endpoint should be secured to prevent unauthorized access to payment data
         log.info("Fetching payment history");
         List<Payment> history = paymentFacade.getPaymentHistory();
         return ResponseEntity.ok(history);
