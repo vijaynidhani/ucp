@@ -1,0 +1,15 @@
+package com.altruist.projects.ucp.payment.services;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class DemoService {
+    public String getDemoMessage() {
+        return "This is a demo message from the DemoService.";
+    } 
+
+    public void printLine(String message) {
+        System.out.println(message);
+    }
+     
+}
